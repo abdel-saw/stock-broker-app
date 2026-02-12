@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Courtier Boursier - Diffusion en Temps Réel</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- En-tête -->
+        <header class="header">
+            <h1><i class="fas fa-chart-line"></i> Courtier Boursier</h1>
+            <p class="subtitle">Diffusion de cours en temps réel avec Kafka & WebSocket</p>
+        </header>
+
+        <!-- Section Configuration -->
+        <section class="card">
+            <h2><i class="fas fa-user"></i> Configuration du Courtier</h2>
+            <div class="form-group">
+                <label for="brokerId">Identifiant Courtier:</label>
+                <input type="text" id="brokerId" value="courtier1" placeholder="Votre ID">
+                <button onclick="connectBroker()" class="btn btn-primary">
+                    <i class="fas fa-plug"></i> Se Connecter
+                </button>
+            </div>
+            <div id="connectionStatus" class="status disconnected">
+                <i class="fas fa-times-circle"></i> Non connecté
+            </div>
+        </section>
+
+        <!-- Section Abonnements -->
+        <section class="card">
+            <h2><i class="fas fa-bell"></i> Gestion des Abonnements</h2>
+            <div class="form-group">
+                <label for="stockSymbol">Symbole Boursier:</label>
+                <input type="text" id="stockSymbol" placeholder="AAPL, GOOGL, MSFT...">
+                <button onclick="subscribe()" class="btn btn-success">
+                    <i class="fas fa-plus"></i> S'abonner
+                </button>
+                <button onclick="unsubscribe()" class="btn btn-danger">
+                    <i class="fas fa-minus"></i> Se Désabonner
+                </button>
+            </div>
+            
+            <div class="quick-subscriptions">
+                <h3>Abonnements Rapides:</h3>
+                <div class="stock-buttons">
+                    <button onclick="quickSubscribe('AAPL')" class="stock-btn apple">AAPL</button>
+                    <button onclick="quickSubscribe('GOOGL')" class="stock-btn google">GOOGL</button>
+                    <button onclick="quickSubscribe('MSFT')" class="stock-btn microsoft">MSFT</button>
+                    <button onclick="quickSubscribe('AMZN')" class="stock-btn amazon">AMZN</button>
+                    <button onclick="quickSubscribe('TSLA')" class="stock-btn tesla">TSLA</button>
+                    <button onclick="quickSubscribe('META')" class="stock-btn meta">META</button>
+                </div>
+            </div>
+            
+            <div id="subscriptionsList" class="subscriptions">
+                <p><i class="fas fa-spinner fa-spin"></i> Chargement des abonnements...</p>
+            </div>
+        </section>
+
+        <!-- Section Cours en Temps Réel -->
+        <section class="card">
+            <h2><i class="fas fa-bolt"></i> Cours en Temps Réel</h2>
+            <div class="controls">
+                <button onclick="toggleAutoScroll()" id="autoScrollBtn" class="btn btn-info">
+                    <i class="fas fa-scroll"></i> Auto-scroll: ON
+                </button>
+                <button onclick="clearPrices()" class="btn btn-warning">
+                    <i class="fas fa-trash"></i> Effacer
+                </button>
+            </div>
+            
+            <div class="stock-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Symbole</th>
+                            <th>Prix</th>
+                            <th>Variation</th>
+                            <th>%</th>
+                            <th>Volume</th>
+                            <th>Heure</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stockPrices">
+                        <!-- Les cours apparaîtront ici -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section Logs -->
+        <section class="card">
+            <h2><i class="fas fa-list"></i> Journal d'Activité</h2>
+            <div class="logs-container">
+                <div id="logs"></div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Application de diffusion de cours boursiers | Kafka + Spring Boot + WebSocket</p>
+            <p class="server-status">Serveur: <span id="serverStatus">🟡 Connecting...</span></p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.0/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
