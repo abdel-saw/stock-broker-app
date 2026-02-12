@@ -1,10 +1,6 @@
 ```markdown
-# Application de Diffusion des Cours Boursiers en Temps Réel avec Kafka et Spring Boot
 
-[![Java](https://img.shields.io/badge/Java-21-blue)](https://www.oracle.com/java/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.x-green)](https://spring.io/projects/spring-boot)
-[![Kafka](https://img.shields.io/badge/Apache%20Kafka-3.6.x-orange)](https://kafka.apache.org/)
-[![Docker](https://img.shields.io/badge/Docker-Compose-blue)](https://docs.docker.com/compose/)
+# Application de Diffusion des Cours Boursiers en Temps Réel avec Kafka et Spring Boot
 
 ## Description du Projet
 
@@ -44,22 +40,24 @@ L'architecture suit le modèle **publication/abonnement (pub/sub)** de Kafka, of
 
 ## Structure du Projet
 
-```
-stock-kafka-demo/
-├── src/
-│   ├── main/
-│   │   ├── java/com/exemple/stockkafka/
-│   │   │   ├── dto/                → PriceUpdate (record)
-│   │   │   ├── producer/           → StockPriceSimulator (producteur)
-│   │   │   ├── consumer/           → BrokerPriceListener (consommateur)
-│   │   │   ├── controller/         → SubscriptionController (optionnel)
-│   │   │   └── StockKafkaDemoApplication.java
-│   │   └── resources/
-│   │       └── application.properties  → Configuration Kafka
-├── docker-compose.yml                  → Configuration Kafka + Zookeeper
-├── pom.xml
-└── README.md
-```
+📦 stock-kafka-demo/
+├── 📁 src/
+│   └── 📁 main/
+│       ├── 📁 java/com/exemple/stockkafka/
+│       │   ├── 📁 dto/
+│       │   │   └── 📄 PriceUpdate.java (record)
+│       │   ├── 📁 producer/
+│       │   │   └── 📄 StockPriceSimulator.java
+│       │   ├── 📁 consumer/
+│       │   │   └── 📄 BrokerPriceListener.java
+│       │   ├── 📁 controller/
+│       │   │   └── 📄 SubscriptionController.java (optionnel)
+│       │   └── 📄 StockKafkaDemoApplication.java
+│       └── 📁 resources/
+│           └── 📄 application.properties
+├── 📄 docker-compose.yml
+├── 📄 pom.xml
+└── 📄 README.md
 
 ## Installation et Configuration
 
