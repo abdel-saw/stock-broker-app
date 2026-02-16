@@ -12,9 +12,6 @@ L'architecture suit le modèle **publication/abonnement (pub/sub)** de Kafka, of
 
 > **Note** : Cette implémentation est une version simplifiée et fonctionnelle réalisée en moins de 12 heures, démontrant les concepts clés du projet. Elle peut être étendue (WebSocket, interface web, microservices séparés, etc.) comme décrit dans le rapport complet.
 
-![Architecture Globale du Système](screenshots/architecture.png)
-*Figure 1 : Architecture globale de l'application*
-
 ## Fonctionnalités Principales
 
 - Génération automatique et périodique de cours boursiers simulés (AAPL, TSLA, MSFT, GOOGL, META, NVDA, etc.)
@@ -69,8 +66,6 @@ Vérification :
 ```bash
 docker ps
 ```
-![Lancement de Kafka avec Docker](screenshots/zookeeper_kafka.png)
-*Figure 3 : Lancement de Kafka et Zookeeper via Docker Compose*
 
 ### 2. Lancer l’application Spring Boot
 
@@ -78,8 +73,10 @@ Dans Eclipse : Clic droit sur `StockKafkaDemoApplication.java` → **Run As → 
 
 ### 3. Démonstration en temps réel
 
-Une fois l’application lancée, vous verrez dans la console :
-
+![Lancement de Kafka avec Docker](screenshots/zookeeper_kafka.png)
+*Lancement de Kafka et Zookeeper via Docker Compose*
+![Architecture Globale du Système](screenshots/architecture.png)
+*Figure 1 : Architecture globale de l'application*
 ![Diffusion des cours](screenshots/main_screen1.png)
 *Symboles et connexion*
 ![Diffusion des cours](screenshots/main_screen2.png)
