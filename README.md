@@ -76,7 +76,7 @@ Dans Eclipse : Clic droit sur `StockKafkaDemoApplication.java` → **Run As → 
 ![Lancement de Kafka avec Docker](screenshots/zookeeper_kafka.png)
 *Lancement de Kafka et Zookeeper via Docker Compose*
 ![Architecture Globale du Système](screenshots/architecture.png)
-*Figure 1 : Architecture globale de l'application*
+*Architecture globale de l'application*
 ![Diffusion des cours](screenshots/main_screen1.png)
 *Symboles et connexion*
 ![Diffusion des cours](screenshots/main_screen2.png)
