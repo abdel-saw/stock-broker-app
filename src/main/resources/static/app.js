@@ -38,6 +38,11 @@ function connectBroker() {
         document.getElementById('brokerId').value = brokerId;
     }
     
+    if (!/^[A-Za-z0-9_-]{1,64}$/.test(brokerId)) {
+        addLog('Identifiant invalide: lettres, chiffres, tirets et underscores uniquement.');
+        return;
+    }
+
     // Fermer la connexion existante
     if (stompClient !== null) {
         stompClient.disconnect();
@@ -49,8 +54,7 @@ function connectBroker() {
     
     stompClient.connect({}, function(frame) {
         // Mettre à jour le statut
-        document.getElementById('connectionStatus').innerHTML = 
-            '<i class="fas fa-check-circle"></i> Connecté en tant que: ' + brokerId;
+        document.getElementById('connectionStatus').textContent = 'Connecté en tant que: ' + brokerId;
         document.getElementById('connectionStatus').className = 'status connected';
         
         addLog('✅ Connecté au serveur WebSocket');
@@ -92,7 +96,7 @@ function subscribe() {
         return;
     }
     
-    fetch(`/api/brokers/${brokerId}/subscribe/${symbol}`, {
+    fetch(`/api/brokers/${encodeURIComponent(brokerId)}/subscribe/${encodeURIComponent(symbol)}`, {
         method: 'POST'
     })
     .then(response => {
@@ -117,7 +121,7 @@ function unsubscribe() {
         return;
     }
     
-    fetch(`/api/brokers/${brokerId}/unsubscribe/${symbol}`, {
+    fetch(`/api/brokers/${encodeURIComponent(brokerId)}/unsubscribe/${encodeURIComponent(symbol)}`, {
         method: 'DELETE'
     })
     .then(response => {
@@ -140,22 +144,10 @@ function quickSubscribe(symbol) {
 
 // Charger les abonnements
 function loadSubscriptions() {
-    fetch(`/api/brokers/${brokerId}/subscriptions`)
+    fetch(`/api/brokers/${encodeURIComponent(brokerId)}/subscriptions`)
         .then(response => response.json())
         .then(symbols => {
-            let html = '<h3><i class="fas fa-star"></i> Vos Abonnements</h3>';
-            
-            if (symbols && symbols.length > 0) {
-                html += '<div class="subscribed-symbols">';
-                symbols.forEach(symbol => {
-                    html += `<span class="symbol-tag">${symbol}</span>`;
-                });
-                html += '</div>';
-            } else {
-                html += '<p class="no-subscriptions">Vous n\'êtes abonné à aucun symbole</p>';
-            }
-            
-            document.getElementById('subscriptionsList').innerHTML = html;
+            renderSubscriptions(symbols);
         })
         .catch(error => {
             console.error('Error loading subscriptions:', error);
@@ -164,59 +156,60 @@ function loadSubscriptions() {
         });
 }
 
-// Afficher un cours boursier
-function displayStockPrice(stock) {
-    const tbody = document.getElementById('stockPrices');
-    
-    // Vérifier si la ligne existe déjà
-    let existingRow = document.getElementById(`row-${stock.symbol}`);
-    
-    if (existingRow) {
-        // Mettre à jour la ligne existante
-        existingRow.cells[1].textContent = `$${stock.currentPrice.toFixed(2)}`;
-        existingRow.cells[2].textContent = stock.change >= 0 ? 
-            `+${stock.change.toFixed(2)}` : `${stock.change.toFixed(2)}`;
-        existingRow.cells[3].textContent = stock.changePercent >= 0 ? 
-            `+${stock.changePercent.toFixed(2)}%` : `${stock.changePercent.toFixed(2)}%`;
-        existingRow.cells[4].textContent = Math.round(stock.volume).toLocaleString();
-        existingRow.cells[5].textContent = new Date(stock.timestamp).toLocaleTimeString();
-        
-        // Mettre à jour les classes de couleur
-        const changeClass = stock.change >= 0 ? 'positive' : 'negative';
-        existingRow.cells[2].className = changeClass;
-        existingRow.cells[3].className = changeClass;
-        
-        // Effet de mise à jour
-        existingRow.classList.add('new-price');
-        setTimeout(() => existingRow.classList.remove('new-price'), 1000);
-        
+// Les valeurs reçues sont toujours insérées comme texte, jamais comme HTML.
+function renderSubscriptions(symbols) {
+    const list = document.getElementById('subscriptionsList');
+    list.replaceChildren();
+    const heading = document.createElement('h3');
+    heading.textContent = 'Vos Abonnements';
+    list.appendChild(heading);
+    const group = document.createElement('div');
+    group.className = 'subscribed-symbols';
+    for (const symbol of Array.isArray(symbols) ? symbols : []) {
+        const tag = document.createElement('span');
+        tag.className = 'symbol-tag';
+        tag.textContent = String(symbol);
+        group.appendChild(tag);
+    }
+    if (group.children.length) {
+        list.appendChild(group);
     } else {
-        // Créer une nouvelle ligne
-        const row = document.createElement('tr');
+        const empty = document.createElement('p');
+        empty.className = 'no-subscriptions';
+        empty.textContent = "Vous n'êtes abonné à aucun symbole";
+        list.appendChild(empty);
+    }
+}
+
+function displayStockPrice(stock) {
+    if (!stock || typeof stock.symbol !== 'string' ||
+        !/^[A-Z][A-Z0-9.-]{0,14}$/.test(stock.symbol) ||
+        !['currentPrice', 'change', 'changePercent', 'volume'].every(
+            key => Number.isFinite(stock[key])) ||
+        stock.currentPrice <= 0 || stock.volume < 0) return;
+    const tbody = document.getElementById('stockPrices');
+    let row = document.getElementById(`row-${stock.symbol}`);
+    if (!row) {
+        row = document.createElement('tr');
         row.id = `row-${stock.symbol}`;
-        row.classList.add('new-price');
-        
-        const changeClass = stock.change >= 0 ? 'positive' : 'negative';
-        const changeSign = stock.change >= 0 ? '+' : '';
-        
-        row.innerHTML = `
-            <td><strong>${stock.symbol}</strong></td>
-            <td><strong>$${stock.currentPrice.toFixed(2)}</strong></td>
-            <td class="${changeClass}">${changeSign}${stock.change.toFixed(2)}</td>
-            <td class="${changeClass}">${changeSign}${stock.changePercent.toFixed(2)}%</td>
-            <td>${Math.round(stock.volume).toLocaleString()}</td>
-            <td>${new Date(stock.timestamp).toLocaleTimeString()}</td>
-            <td><span class="status-badge connected">Actif</span></td>
-        `;
-        
-        // Ajouter en haut du tableau
+        for (let i = 0; i < 7; i++) row.appendChild(document.createElement('td'));
         tbody.insertBefore(row, tbody.firstChild);
     }
-    
-    // Auto-scroll
-    if (autoScrollEnabled) {
-        tbody.parentNode.scrollTop = 0;
-    }
+    const sign = stock.change >= 0 ? '+' : '';
+    const percentSign = stock.changePercent >= 0 ? '+' : '';
+    const values = [
+        stock.symbol, `$${stock.currentPrice.toFixed(2)}`,
+        `${sign}${stock.change.toFixed(2)}`,
+        `${percentSign}${stock.changePercent.toFixed(2)}%`,
+        Math.round(stock.volume).toLocaleString(),
+        new Date(stock.timestamp).toLocaleTimeString(), 'Actif',
+    ];
+    values.forEach((value, index) => { row.cells[index].textContent = value; });
+    row.cells[2].className = stock.change >= 0 ? 'positive' : 'negative';
+    row.cells[3].className = stock.changePercent >= 0 ? 'positive' : 'negative';
+    row.classList.add('new-price');
+    setTimeout(() => row.classList.remove('new-price'), 1000);
+    if (autoScrollEnabled) tbody.parentNode.scrollTop = 0;
 }
 
 // Basculer l'auto-scroll
@@ -238,7 +231,7 @@ function clearPrices() {
 function addLog(message) {
     const logsDiv = document.getElementById('logs');
     const logEntry = document.createElement('div');
-    logEntry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+    logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
     logsDiv.prepend(logEntry);
     
     // Limiter à 50 messages

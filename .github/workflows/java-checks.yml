@@ -24,3 +24,5 @@ jobs:
           cache: maven
       - name: Test and package with embedded Kafka
         run: bash mvnw --batch-mode --no-transfer-progress verify
+      - name: Test dashboard text rendering and URL handling
+        run: node --test tests/dashboard.test.cjs
