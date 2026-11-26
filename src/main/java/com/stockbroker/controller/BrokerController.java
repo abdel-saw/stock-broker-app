@@ -15,6 +15,11 @@ public class BrokerController {
     @Autowired
     private SubscriptionService subscriptionService;
     
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> invalidSubscription(IllegalArgumentException error) {
+        return ResponseEntity.badRequest().body(error.getMessage());
+    }
+
     /**
      * S'abonner à un symbole
      */
