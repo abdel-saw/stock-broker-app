@@ -1,78 +1,73 @@
 package com.stockbroker.service;
 
 import org.springframework.stereotype.Service;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 public class SubscriptionService {
-    
-    
-    private final Map<String, Set<String>> brokerSubscriptions = new ConcurrentHashMap<>();
-    
-    
-    private final Map<String, Set<String>> stockSubscribers = new ConcurrentHashMap<>();
-    
-    
-    public void subscribe(String brokerId, String stockSymbol) {
-       
-        brokerId = brokerId.trim();
-        stockSymbol = stockSymbol.trim().toUpperCase();
-        
-        
-        brokerSubscriptions.computeIfAbsent(brokerId, k -> ConcurrentHashMap.newKeySet())
-                          .add(stockSymbol);
-        
-        
-        stockSubscribers.computeIfAbsent(stockSymbol, k -> ConcurrentHashMap.newKeySet())
-                       .add(brokerId);
-        
-        System.out.println("✅ Broker '" + brokerId + "' abonné à '" + stockSymbol + "'");
-        System.out.println("📊 Abonnements actuels: " + brokerSubscriptions);
+    // One monitor protects both indexes, including reads and snapshots.
+    private final Map<String, Set<String>> brokerSubscriptions = new HashMap<>();
+    private final Map<String, Set<String>> stockSubscribers = new HashMap<>();
+
+    public synchronized void subscribe(String brokerId, String stockSymbol) {
+        brokerId = normalizeBroker(brokerId);
+        stockSymbol = normalizeSymbol(stockSymbol);
+        brokerSubscriptions.computeIfAbsent(brokerId, key -> new HashSet<>()).add(stockSymbol);
+        stockSubscribers.computeIfAbsent(stockSymbol, key -> new HashSet<>()).add(brokerId);
     }
-    
-    
-    public void unsubscribe(String brokerId, String stockSymbol) {
-        brokerId = brokerId.trim();
-        stockSymbol = stockSymbol.trim().toUpperCase();
-        
-       
-        if (brokerSubscriptions.containsKey(brokerId)) {
-            brokerSubscriptions.get(brokerId).remove(stockSymbol);
-            if (brokerSubscriptions.get(brokerId).isEmpty()) {
-                brokerSubscriptions.remove(brokerId);
+
+    public synchronized void unsubscribe(String brokerId, String stockSymbol) {
+        brokerId = normalizeBroker(brokerId);
+        stockSymbol = normalizeSymbol(stockSymbol);
+        remove(brokerSubscriptions, brokerId, stockSymbol);
+        remove(stockSubscribers, stockSymbol, brokerId);
+    }
+
+    public synchronized Set<String> getSubscribersForStock(String stockSymbol) {
+        return Set.copyOf(stockSubscribers.getOrDefault(normalizeSymbol(stockSymbol), Set.of()));
+    }
+
+    public synchronized Set<String> getSubscriptionsForBroker(String brokerId) {
+        return Set.copyOf(brokerSubscriptions.getOrDefault(normalizeBroker(brokerId), Set.of()));
+    }
+
+    public synchronized Map<String, Set<String>> getAllSubscriptions() {
+        Map<String, Set<String>> snapshot = new HashMap<>();
+        brokerSubscriptions.forEach((broker, symbols) -> snapshot.put(broker, Set.copyOf(symbols)));
+        return Map.copyOf(snapshot);
+    }
+
+    public synchronized boolean isSubscribed(String brokerId, String stockSymbol) {
+        return brokerSubscriptions.getOrDefault(normalizeBroker(brokerId), Set.of())
+                .contains(normalizeSymbol(stockSymbol));
+    }
+
+    private static void remove(Map<String, Set<String>> index, String key, String value) {
+        Set<String> values = index.get(key);
+        if (values != null) {
+            values.remove(value);
+            if (values.isEmpty()) {
+                index.remove(key);
             }
         }
-        
-        
-        if (stockSubscribers.containsKey(stockSymbol)) {
-            stockSubscribers.get(stockSymbol).remove(brokerId);
-            if (stockSubscribers.get(stockSymbol).isEmpty()) {
-                stockSubscribers.remove(stockSymbol);
-            }
+    }
+
+    private static String normalizeBroker(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Broker ID must not be blank");
         }
-        
-        System.out.println("❌ Broker '" + brokerId + "' désabonné de '" + stockSymbol + "'");
+        return value.trim();
     }
-    
-    
-    public Set<String> getSubscribersForStock(String stockSymbol) {
-        return stockSubscribers.getOrDefault(stockSymbol, Collections.emptySet());
-    }
-    
-   
-    public Set<String> getSubscriptionsForBroker(String brokerId) {
-        return brokerSubscriptions.getOrDefault(brokerId, Collections.emptySet());
-    }
-    
-    
-    public Map<String, Set<String>> getAllSubscriptions() {
-        return new HashMap<>(brokerSubscriptions);
-    }
-    
-    
-    public boolean isSubscribed(String brokerId, String stockSymbol) {
-        return brokerSubscriptions.getOrDefault(brokerId, Collections.emptySet())
-                                 .contains(stockSymbol.toUpperCase());
+
+    private static String normalizeSymbol(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Stock symbol must not be blank");
+        }
+        return value.trim().toUpperCase(Locale.ROOT);
     }
 }
