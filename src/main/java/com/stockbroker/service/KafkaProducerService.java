@@ -9,6 +9,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import org.springframework.kafka.support.SendResult;
+import com.stockbroker.validation.DemoInput;
 
 @Service
 @EnableScheduling
@@ -27,10 +30,17 @@ public class KafkaProducerService {
     private KafkaTemplate<String, StockPrice> kafkaTemplate;
     
     
-    public void publishStockPrice(StockPrice stockPrice) {
+    public CompletableFuture<SendResult<String, StockPrice>> publishStockPrice(StockPrice stockPrice) {
+        DemoInput.price(stockPrice);
         stockPrice.setTimestamp(LocalDateTime.now());
-        kafkaTemplate.send(TOPIC, stockPrice.getSymbol(), stockPrice);
-        log.info("📤 Publié: {} - ${}", stockPrice.getSymbol(), stockPrice.getCurrentPrice());
+        return kafkaTemplate.send(TOPIC, stockPrice.getSymbol(), stockPrice)
+                .whenComplete((result, error) -> {
+                    if (error == null) {
+                        log.debug("Published: {}", stockPrice.getSymbol());
+                    } else {
+                        log.warn("Kafka publication failed for {}", stockPrice.getSymbol());
+                    }
+                });
     }
     
     

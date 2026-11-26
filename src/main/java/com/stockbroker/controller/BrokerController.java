@@ -9,7 +9,6 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/brokers")
-@CrossOrigin(origins = "*")
 public class BrokerController {
     
     @Autowired

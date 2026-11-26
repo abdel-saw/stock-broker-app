@@ -12,7 +12,7 @@
         <!-- En-tête -->
         <header class="header">
             <h1><i class="fas fa-chart-line"></i> Courtier Boursier</h1>
-            <p class="subtitle">Diffusion de cours en temps réel avec Kafka & WebSocket</p>
+            <p class="subtitle">Démonstration pédagogique — cours simulés avec Kafka & WebSocket</p>
         </header>
 
         <!-- Section Configuration -->
@@ -20,7 +20,7 @@
             <h2><i class="fas fa-user"></i> Configuration du Courtier</h2>
             <div class="form-group">
                 <label for="brokerId">Identifiant Courtier:</label>
-                <input type="text" id="brokerId" value="courtier1" placeholder="Votre ID">
+                <input type="text" id="brokerId" maxlength="64" value="courtier1" placeholder="Votre ID">
                 <button onclick="connectBroker()" class="btn btn-primary">
                     <i class="fas fa-plug"></i> Se Connecter
                 </button>
@@ -35,7 +35,7 @@
             <h2><i class="fas fa-bell"></i> Gestion des Abonnements</h2>
             <div class="form-group">
                 <label for="stockSymbol">Symbole Boursier:</label>
-                <input type="text" id="stockSymbol" placeholder="AAPL, GOOGL, MSFT...">
+                <input type="text" id="stockSymbol" maxlength="15" placeholder="AAPL, GOOGL, MSFT...">
                 <button onclick="subscribe()" class="btn btn-success">
                     <i class="fas fa-plus"></i> S'abonner
                 </button>

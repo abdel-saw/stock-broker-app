@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Locale;
+import com.stockbroker.validation.DemoInput;
 import java.util.Map;
 import java.util.Set;
 
@@ -58,16 +58,10 @@ public class SubscriptionService {
     }
 
     private static String normalizeBroker(String value) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Broker ID must not be blank");
-        }
-        return value.trim();
+        return DemoInput.broker(value);
     }
 
     private static String normalizeSymbol(String value) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Stock symbol must not be blank");
-        }
-        return value.trim().toUpperCase(Locale.ROOT);
+        return DemoInput.symbol(value);
     }
 }

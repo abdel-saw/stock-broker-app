@@ -71,6 +71,11 @@ docker compose down
 
 ## Try the API
 
+Manual publication is **disabled by default**. To exercise the two publish
+examples on a trusted local machine, set `MANUAL_PUBLISHING_ENABLED=true` before
+starting the app (Bash: `export MANUAL_PUBLISHING_ENABLED=true`; PowerShell:
+`$env:MANUAL_PUBLISHING_ENABLED='true'`). Keep it disabled on a shared demo.
+
 ```bash
 curl http://localhost:8080/api/stocks/test
 curl -X POST http://localhost:8080/api/brokers/demo/subscribe/AAPL
@@ -93,7 +98,9 @@ curl -X DELETE http://localhost:8080/api/brokers/demo/unsubscribe/AAPL
 
 Broker IDs are trimmed and case-sensitive. Symbols are trimmed and normalized
 to uppercase independently of the server locale. Duplicate subscriptions are
-idempotent. Blank IDs or symbols return HTTP 400. Subscription reads return
+idempotent. Broker IDs accept 1-64 ASCII letters, digits, underscores or hyphens;
+symbols accept 1-15 ticker characters starting with a letter. Invalid inputs
+return HTTP 400. Subscription reads return
 immutable snapshots; concurrent updates cannot leave the two indexes out of sync.
 
 ## Tests and build
@@ -111,6 +118,11 @@ GitHub Actions runs the same verification command on pull requests and main.
 Tests cover subscription normalization, duplicate/removal behavior, immutable
 snapshots, invalid input, locale independence, concurrent operations, and
 application startup with Kafka.
+
+Dashboard regression tests use Node's built-in test runner and a DOM fixture:
+`node --test tests/dashboard.test.cjs`. They check hostile text, malformed prices,
+URL encoding, broker IDs, and price updates without external JavaScript packages.
+This fixture does not replace a real browser end-to-end test.
 
 ## Stack and source map
 
@@ -132,12 +144,23 @@ This is a single-application learning project. Subscriptions disappear on restar
 the local Kafka setup uses one broker, and the WebSocket broker is in-process.
 The API has no authentication or access control; the all-subscriptions route is
 not an administrative boundary despite its original controller comment.
-The manual-publish response also does not guarantee Kafka delivery.
+Manual REST publication is off by default (HTTP 403). When explicitly enabled,
+prices must be positive, all numeric values finite, and volume nonnegative.
+HTTP 200 is returned only after Kafka acknowledges; failures/timeouts return 503.
+A timeout means the result is unknown: a late delivery can still occur. This is
+not an exactly-once delivery guarantee.
+
+Browser clients can subscribe to price feeds but all inbound STOMP SEND frames
+are blocked, including direct sends to `/topic/stocks/public`. The old
+`/app/message` echo handler is consequently unavailable. REST and SockJS use
+same-origin defaults rather than wildcard browser origins. Kafka deserialization
+trust is restricted to the project's model package. The dashboard inserts
+received values as text and labels its prices as simulated.
 
 No cloud demo is configured. The backend needs a reachable Kafka service;
 uploading the HTML to GitHub Pages alone will not provide live functionality.
-Before publishing a shared demo, the next work is input/output hardening,
-controlled publication, reliable delivery feedback, and a tested hosting design.
+Before publishing a shared demo, the next work is a tested hosting design,
+resource/rate limits, and a review of remaining unauthenticated subscription APIs.
 No availability, resilience, or throughput benchmark is claimed.
 
 ## Screenshots and report
